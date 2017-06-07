@@ -47,11 +47,23 @@ foreach ($repository in $repsoitories)
     }
     elseif ($remote -eq $base)
     {
+        $has_remote = -not [string]::IsNullOrEmpty(((git -C $repository branch -r) -match (git -C $repository name-rev --name-only HEAD)))
+
         Write-Host $repository.BaseName.padright($maxpad) -NoNewline
         Write-Host " : " -NoNewline
-        Write-Host "Need to push" -ForegroundColor Yellow
+        if ($has_remote)
+        {
+            Write-Host "Need to push" -ForegroundColor Yellow
+        }
+        else
+        {
+            Write-Host "No remote" -ForegroundColor Red
+        }
 
-        git -C $repository push --quiet 2> $null
+        if ($Push)
+        {
+            git -C $repository push --quiet 2> $null
+        }
     }
     else
     {
