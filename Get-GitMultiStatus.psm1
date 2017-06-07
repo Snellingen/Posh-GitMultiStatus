@@ -33,9 +33,10 @@
 # This gets the status of the repositories in working directory and pull and push them they need it.
 ##############################################################################
 
-function Get-GitStatus
+function Get-GitMultiStatus
 {
     param(
+        [path]
         [int]$Depth = 0,
         [switch]$Push,
         [switch]$Pull
@@ -43,6 +44,10 @@ function Get-GitStatus
 
     # Get all repositories in the directory, assumes all of them have a .git folder
     $repsoitories = Get-ChildItem -Directory -Depth $Depth | Where-Object {Test-Path ($_.FullName + "\.git")}
+    if ($repsoitories -eq $null)
+    {
+        Write-Host "No git repositories found"
+    }
 
     # Get the string lenght for the longest basename, use for padding.
     $maxpad = 5
@@ -89,6 +94,7 @@ function Get-GitStatus
             {
                 $status = "Ahead"
                 WriteStatus -Status $status -Branch $branch -Color "Yellow"
+
                 if ($Push)
                 {
                     git -C $repository.FullName push --quiet 2> $null
@@ -124,8 +130,10 @@ function WriteStatus()
     )
     if ($Update){Write-Host "`r"-NoNewline}
     else {Write-Host}
-    Write-Host "($branch)".PadRight(10) -NoNewline
+    Write-Host "($branch)".PadRight(20) -NoNewline
     Write-Host $repository.BaseName.padright($maxpad) -NoNewline
     Write-Host " : " -NoNewline
     Write-Host "$status".padright(10) -ForegroundColor $Color -NoNewline
 }
+
+export-modulemember -function Get-GitMultiStatus
