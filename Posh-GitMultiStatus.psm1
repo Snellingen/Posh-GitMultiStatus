@@ -5,7 +5,7 @@
 #
 #.DESCRIPTION
 # The function will scan the working directory for git repositories and do an git remote update on them.
-# It will then check the status of the local active branch and compare it to the remote so that it can
+# It will then run "git fetch" and check the status of the local active branch and compare it to the remote so that it can
 # inform if the branch is up-to-date, behind, ahead or divereged from the remote.
 # The function will also display staged and unstaged files if they exist.
 #
@@ -67,7 +67,7 @@ function Get-GitMultiStatus
     # Iterate through each repo and get the status
     foreach ($repository in $repsoitories)
     {
-        git -C $repository.FullName remote update --quiet 2> $null
+        git -C $repository.FullName fetch 2>&1 | out-null
         $branch = git -C $repository.FullName name-rev --name-only HEAD 2> $null
         $local = git -C $repository.FullName rev-parse --quiet "@" 2> $null
         $remote = git -C $repository.FullName rev-parse --quiet "@{u}" 2> $null
