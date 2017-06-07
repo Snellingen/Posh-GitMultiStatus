@@ -50,14 +50,19 @@ function Get-GitMultiStatus
     }
 
     # Get the string lenght for the longest basename, use for padding.
-    $maxpad = 5
+    $maxpad_name = 5
+    $maxpad_branch = 5
     foreach ($repository in $repsoitories) {
-        if ($repository.BaseName.length -gt $maxpad)
+        if ($repository.BaseName.length -gt $maxpad_name)
         {
-            $maxpad = $repository.BaseName.length
+            $maxpad_name = $repository.BaseName.length
+        }
+        $branch = git -C $repository.FullName name-rev --name-only HEAD 2> $null
+        if ($branch.lenght -gt $maxpad_branch)
+        {
+             $maxpad_branch = $branch.lenght
         }
     }
-    $maxpad += 10
 
     # Iterate through each repo and get the status
     foreach ($repository in $repsoitories)
@@ -131,8 +136,8 @@ function WriteStatus()
     )
     if ($Update){Write-Host "`r"-NoNewline}
     else {Write-Host}
-    Write-Host "($branch)".PadRight(20) -NoNewline
-    Write-Host $repository.BaseName.padright($maxpad) -NoNewline
+    Write-Host "($branch)".PadRight($maxpad_branch +5) -NoNewline
+    Write-Host $repository.BaseName.padright($maxpad_name +5) -NoNewline
     Write-Host " : " -NoNewline
     Write-Host "$status".padright(10) -ForegroundColor $Color -NoNewline
 }
