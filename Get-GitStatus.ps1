@@ -18,17 +18,20 @@ foreach ($repository in $repsoitories) {
         $maxpad = $repository.BaseName.length
     }
 }
-$maxpad += 20
+$maxpad += 10
 
 # Ithereate through each repo and get the status
 foreach ($repository in $repsoitories)
 {
+
+    $branch = git -C $repository name-rev --name-only HEAD
     $local = git -C $repository.FullName rev-parse --quiet "@" 2> $null
     $remote = git -C $repository.FullName rev-parse --quiet "@{u}" 2> $null
     $base = git -C $repository.FullName merge-base "@" "@{u}" 2> $null
 
     if ($local -eq  $remote)
     {
+        Write-Host "($branch)".PadRight(10) -NoNewline
         Write-Host $repository.BaseName.padright($maxpad) -NoNewline
         Write-Host " : " -NoNewline
         Write-Host "Up-to-date" -ForegroundColor Green
@@ -36,6 +39,7 @@ foreach ($repository in $repsoitories)
     }
     elseif ($local -eq $base)
     {
+        Write-Host "($branch)".PadRight(10) -NoNewline
         Write-Host $repository.BaseName.padright($maxpad) -NoNewline
         Write-Host " : " -NoNewline
         Write-Host "Need to pull" -ForegroundColor Magenta
@@ -47,8 +51,9 @@ foreach ($repository in $repsoitories)
     }
     elseif ($remote -eq $base)
     {
-        $has_remote = -not [string]::IsNullOrEmpty(((git -C $repository branch -r) -match (git -C $repository name-rev --name-only HEAD)))
+        $has_remote = -not [string]::IsNullOrEmpty(((git -C $repository branch -r) -match $branch ))
 
+        Write-Host "($branch)".PadRight(10) -NoNewline
         Write-Host $repository.BaseName.padright($maxpad) -NoNewline
         Write-Host " : " -NoNewline
         if ($has_remote)
@@ -67,6 +72,7 @@ foreach ($repository in $repsoitories)
     }
     else
     {
+        Write-Host "($branch)".PadRight(10) -NoNewline
         Write-Host $repository.BaseName.padright($maxpad) -NoNewline
         Write-Host " : " -NoNewline
         Write-Host "Diverged" -ForegroundColor Red
