@@ -1,4 +1,38 @@
 
+##############################################################################
+#.SYNOPSIS
+# Get a summary of the status of all the git repositories in the working directory.
+#
+#.DESCRIPTION
+# The function will scan the working directory for git repositories and do an git remote update on them.
+# It will then check the status of the local active branch and compare it to the remote so that it can
+# inform if the branch is up-to-date, behind, ahead or divereged from the remote.
+# The function will also display staged and unstaged files if they exist.
+#
+#.PARAMETER Depth
+# The recursive depth to scan for repositories, default is 0 (flat).
+#
+#.PARAMETER Push
+# If set, the function will do a git push if the status is "Ahead".
+# Be carefull as this automatically pushes commited changes to the remote!
+#
+#.PARAMETER Pull
+# If this paramter is set, the function will do a pull where the status is "Behind".
+#
+#.LINK
+# Https:\\github.com\user\matias\get-gitstatus
+#
+#.EXAMPLE
+# Get-GitStatus
+# This gets the status of the repositories in working directory.
+#.EXAMPLE
+# Get-GitStatus -Depth 1
+# This gets the status of the repositories in working directory witha recursive depth of 1.
+#.EXAMPLE
+# Get-GitStatus -Pull -Push
+# This gets the status of the repositories in working directory and pull and push them they need it.
+##############################################################################
+
 function Get-GitStatus
 {
     param(
@@ -23,29 +57,27 @@ function Get-GitStatus
     # Iterate through each repo and get the status
     foreach ($repository in $repsoitories)
     {
-
-        $branch = git -C $repository.FullName name-rev --name-only HEAD
+        git -C $repository.FullName remote update --quiet 2> $null
+        $branch = git -C $repository.FullName name-rev --name-only HEAD 2> $null
         $local = git -C $repository.FullName rev-parse --quiet "@" 2> $null
         $remote = git -C $repository.FullName rev-parse --quiet "@{u}" 2> $null
         $base = git -C $repository.FullName merge-base "@" "@{u}" 2> $null
 
         if ($local -eq  $remote)
         {
-            Write-Host "($branch)".PadRight(10) -NoNewline
-            Write-Host $repository.BaseName.padright($maxpad) -NoNewline
-            Write-Host " : " -NoNewline
-            Write-Host "Up-to-date" -ForegroundColor Green
-
+            $status = "Up-to-date"
+            WriteStatus -Status $status -Branch $branch -Color "Green"
         }
         elseif ($local -eq $base)
         {
-            Write-Host "($branch)".PadRight(10) -NoNewline
-            Write-Host $repository.BaseName.padright($maxpad) -NoNewline
-            Write-Host " : " -NoNewline
-            Write-Host "Need to pull" -ForegroundColor Magenta
+            $status = "Behind"
+            WriteStatus -Status $status -Branch $branch -Color "Magenta"
+
             if ($Pull)
             {
                 git -C $repository.FullName pull --quiet 2> $null
+                $status = "Up-to-date"
+                WriteStatus -Status $status -Branch $branch -Color "Green" -Update
             }
 
         }
@@ -53,32 +85,47 @@ function Get-GitStatus
         {
             $has_remote = -not [string]::IsNullOrEmpty(((git -C $repository.FullName branch -r) -match $branch ))
 
-            Write-Host "($branch)".PadRight(10) -NoNewline
-            Write-Host $repository.BaseName.padright($maxpad) -NoNewline
-            Write-Host " : " -NoNewline
             if ($has_remote)
             {
-                Write-Host "Need to push" -ForegroundColor Yellow
+                $status = "Ahead"
+                WriteStatus -Status $status -Branch $branch -Color "Yellow"
+                if ($Push)
+                {
+                    git -C $repository.FullName push --quiet 2> $null
+                    $status = "Up-to-date"
+                    WriteStatus -Status $status -Branch $branch -Color "Green" -Update
+                }
             }
             else
             {
-                Write-Host "No remote" -ForegroundColor Red
-            }
-
-            if ($Push)
-            {
-                git -C $repository.FullName push --quiet 2> $null
+                $status = "No remote"
+                WriteStatus -Status $status -Branch $branch -Color "Red"
             }
         }
         else
         {
-            Write-Host "($branch)".PadRight(10) -NoNewline
-            Write-Host $repository.BaseName.padright($maxpad) -NoNewline
-            Write-Host " : " -NoNewline
-            Write-Host "Diverged" -ForegroundColor Red
-
+            $status = "Diverged"
+            WriteStatus -Status $status -Branch $branch -Color "Red"
         }
 
         git -C $repository.FullName status --short
     }
+}
+
+function WriteStatus()
+{
+    param(
+        [parameter(Mandatory=$true)]
+        [string]$Status,
+        [parameter(Mandatory=$true)]
+        [string]$Branch,
+        [switch]$Update,
+        [string]$Color = "White"
+    )
+    if ($Update){Write-Host "`r"-NoNewline}
+    else {Write-Host}
+    Write-Host "($branch)".PadRight(10) -NoNewline
+    Write-Host $repository.BaseName.padright($maxpad) -NoNewline
+    Write-Host " : " -NoNewline
+    Write-Host "$status".padright(10) -ForegroundColor $Color -NoNewline
 }
