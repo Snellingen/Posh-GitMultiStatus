@@ -16,8 +16,8 @@
 # If set, the function will do a git push if the status is "Ahead".
 # Be carefull as this automatically pushes commited changes to the remote!
 #
-#.PARAMETER Pull
-# If this paramter is set, the function will do a pull where the status is "Behind".
+#.PARAMETER Rebase
+# If this paramter is set, the function will do a rebase where the status is "Behind".
 #
 #.LINK
 # Https:\\github.com\user\matias\get-gitstatus
@@ -29,8 +29,8 @@
 # Get-GitStatus -Depth 1
 # This gets the status of the repositories in working directory witha recursive depth of 1.
 #.EXAMPLE
-# Get-GitStatus -Pull -Push
-# This gets the status of the repositories in working directory and pull and push them they need it.
+# Get-GitStatus -Rebase -Push
+# This gets the status of the repositories in working directory, rebase and push them if they need it.
 ##############################################################################
 
 function Get-GitMultiStatus
@@ -39,7 +39,7 @@ function Get-GitMultiStatus
         [string]$Path = (Get-Location),
         [int]$Depth = 0,
         [switch]$Push,
-        [switch]$Pull
+        [switch]$Rebase
     )
 
     # Get all repositories in the directory, assumes all of them have a .git folder
@@ -83,9 +83,9 @@ function Get-GitMultiStatus
             $status = "Behind"
             WriteStatus -Status $status -Branch $branch -Color "Red"
 
-            if ($Pull)
+            if ($Rebase)
             {
-                git -C $repository.FullName pull --quiet 2> $null
+                git -C $repository.FullName rebase 2>&1 | out-null
                 $status = "Up-to-date"
                 WriteStatus -Status $status -Branch $branch -Update
             }
@@ -102,7 +102,7 @@ function Get-GitMultiStatus
 
                 if ($Push)
                 {
-                    git -C $repository.FullName push --quiet 2> $null
+                    git -C $repository.FullName push --quiet 2>&1 | out-null
                     $status = "Up-to-date"
                     WriteStatus -Status $status -Branch $branch -Update
                 }
@@ -117,15 +117,15 @@ function Get-GitMultiStatus
         {
             $status = "Diverged"
             WriteStatus -Status $status -Branch $branch -Color "Yellow"
-            if ($Pull)
+            if ($Rebase)
             {
-                git -C $repository.FullName pull --quiet 2> $null
+                git -C $repository.FullName rebase 2>&1 | out-null
                 $status = "Behind"
                 WriteStatus -Status $status -Branch $branch -Color "Red" -Update
 
                 if ($Push)
                 {
-                    git -C $repository.FullName push --quiet 2> $null
+                    git -C $repository.FullName push --quiet 2>&1 | out-null
                     $status = "Up-to-date"
                     WriteStatus -Status $status -Branch $branch -Update
                 }
