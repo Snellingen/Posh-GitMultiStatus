@@ -36,14 +36,14 @@
 function Get-GitMultiStatus
 {
     param(
-        [path]
+        [string]$Path = (Get-Location),
         [int]$Depth = 0,
         [switch]$Push,
         [switch]$Pull
     )
 
     # Get all repositories in the directory, assumes all of them have a .git folder
-    $repsoitories = Get-ChildItem -Directory -Depth $Depth | Where-Object {Test-Path ($_.FullName + "\.git")}
+    $repsoitories = Get-ChildItem -Directory -Path $Path -Depth $Depth | Where-Object {Test-Path ($_.FullName + "\.git")}
     if ($repsoitories -eq $null)
     {
         Write-Host "No git repositories found"
@@ -114,6 +114,7 @@ function Get-GitMultiStatus
             WriteStatus -Status $status -Branch $branch -Color "Red"
         }
 
+        Write-Host
         git -C $repository.FullName status --short
     }
 }
