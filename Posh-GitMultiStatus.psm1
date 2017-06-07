@@ -76,18 +76,18 @@ function Get-GitMultiStatus
         if ($local -eq  $remote)
         {
             $status = "Up-to-date"
-            WriteStatus -Status $status -Branch $branch -Color "Green"
+            WriteStatus -Status $status -Branch $branch
         }
         elseif ($local -eq $base)
         {
             $status = "Behind"
-            WriteStatus -Status $status -Branch $branch -Color "Magenta"
+            WriteStatus -Status $status -Branch $branch -Color "Red"
 
             if ($Pull)
             {
                 git -C $repository.FullName pull --quiet 2> $null
                 $status = "Up-to-date"
-                WriteStatus -Status $status -Branch $branch -Color "Green" -Update
+                WriteStatus -Status $status -Branch $branch -Update
             }
 
         }
@@ -98,25 +98,38 @@ function Get-GitMultiStatus
             if ($has_remote)
             {
                 $status = "Ahead"
-                WriteStatus -Status $status -Branch $branch -Color "Yellow"
+                WriteStatus -Status $status -Branch $branch -Color "Green"
 
                 if ($Push)
                 {
                     git -C $repository.FullName push --quiet 2> $null
                     $status = "Up-to-date"
-                    WriteStatus -Status $status -Branch $branch -Color "Green" -Update
+                    WriteStatus -Status $status -Branch $branch -Update
                 }
             }
             else
             {
                 $status = "No remote"
-                WriteStatus -Status $status -Branch $branch -Color "Red"
+                WriteStatus -Status $status -Branch $branch -Color "DarkRed"
             }
         }
         else
         {
             $status = "Diverged"
-            WriteStatus -Status $status -Branch $branch -Color "Red"
+            WriteStatus -Status $status -Branch $branch -Color "Yellow"
+            if ($Pull)
+            {
+                git -C $repository.FullName pull --quiet 2> $null
+                $status = "Behind"
+                WriteStatus -Status $status -Branch $branch -Color "Red" -Update
+
+                if ($Push)
+                {
+                    git -C $repository.FullName push --quiet 2> $null
+                    $status = "Up-to-date"
+                    WriteStatus -Status $status -Branch $branch -Update
+                }
+            }
         }
 
         Write-Host
