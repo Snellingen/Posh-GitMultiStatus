@@ -123,7 +123,7 @@ function Get-GitMultiStatus
             if ($Rebase)
             {
                 git -C $repository.FullName rebase 2>&1 | out-null
-                $status = "Behind"
+                $status = "Ahead"
                 WriteStatus -Status $status -Branch $branch -Color "Red" -Update
 
                 if ($Push)
