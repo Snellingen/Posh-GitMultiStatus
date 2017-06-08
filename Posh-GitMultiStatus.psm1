@@ -41,6 +41,7 @@ function Get-GitMultiStatus
     param(
         [string]$Path = (Get-Location),
         [int]$Depth = 0,
+        [switch]$NoFetch,
         [switch]$Push,
         [switch]$Rebase
     )
@@ -70,7 +71,11 @@ function Get-GitMultiStatus
     # Iterate through each repo and get the status
     foreach ($repository in $repsoitories)
     {
-        git -C $repository.FullName fetch 2>&1 | out-null
+        if (-not $NoFetch)
+        {
+            git -C $repository.FullName fetch 2>&1 | out-null
+        }
+
         $branch = git -C $repository.FullName name-rev --name-only HEAD 2> $null
         $local = git -C $repository.FullName rev-parse --quiet "@" 2> $null
         $remote = git -C $repository.FullName rev-parse --quiet "@{u}" 2> $null
