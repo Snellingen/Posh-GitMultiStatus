@@ -9,6 +9,9 @@
 # inform if the branch is up-to-date, behind, ahead or divereged from the remote.
 # The function will also display staged and unstaged files if they exist.
 #
+#.PARAMETER Path
+# The path you want to scan for repositories, defualt is working directory.
+#
 #.PARAMETER Depth
 # The recursive depth to scan for repositories, default is 0 (flat).
 #
