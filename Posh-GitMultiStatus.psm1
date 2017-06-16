@@ -22,6 +22,9 @@
 #.PARAMETER Rebase
 # If this paramter is set, the function will do a rebase where the status is "Behind".
 #
+#.PARAMETER NoFetch
+# If set, the function will not fetch from remote, this is faster, but only compares from the last fetch.
+#
 #.LINK
 # Https:\\github.com\user\matias\get-gitstatus
 #
