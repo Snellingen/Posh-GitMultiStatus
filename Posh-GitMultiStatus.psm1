@@ -65,9 +65,10 @@ function Get-GitMultiStatus
             $maxpad_name = $repository.BaseName.length
         }
         $branch = git -C $repository.FullName name-rev --name-only HEAD 2> $null
-        if ($branch.lenght -gt $maxpad_branch)
+        $length = $branch.length
+        if ($length -gt $maxpad_branch)
         {
-             $maxpad_branch = $branch.lenght
+             $maxpad_branch = $length
         }
     }
 
